@@ -1,0 +1,8 @@
+__pycache__/
+.env/
+.vscode/
+.vs/
+logs/
+cache/
+*.whl
+*.ps1
