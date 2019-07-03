@@ -23,7 +23,7 @@ def link_predict():
     return jsonify(result)
 
 @app.route('/link.train')
-def link_predict():
+def link_train():
     result = event_queue.call_service(
         service_name = 'link.train',
         service_data = {
