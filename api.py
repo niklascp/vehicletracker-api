@@ -6,6 +6,11 @@ from vehicletracker.azure.events import EventHubsQueue
 app = Flask(__name__)
 event_queue = EventHubsQueue(consumer_group = '$default')
 
+@app.before_first_request
+def startup():
+    event_queue.start()
+    atexit.register(event_queue.stop)
+
 @app.route('/link.predict')
 def index():
     result = event_queue.call_service(
@@ -18,6 +23,4 @@ def index():
     return jsonify(result)
 
 if __name__ == '__main__':
-    event_queue.start()
-    atexit.register(event_queue.stop)
     app.run(debug=True)
