@@ -136,7 +136,7 @@ class ServiceQueue():
             raise ApplicationError("Cannot register services on a client-only ServiceQueue.")
         self.listen(f'service.{service_name}', lambda x: target(x.get('serviceData')))
 
-    def call_service(self, service_name, service_data, timeout = 1):
+    def call_service(self, service_name, service_data, timeout = 30):
         correlation_id = str(uuid.uuid4())
         self.wait_events[correlation_id] = threading.Event()
         self.publish_event({
