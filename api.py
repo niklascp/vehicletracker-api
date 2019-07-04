@@ -11,6 +11,13 @@ def startup():
     event_queue.start()
     atexit.register(event_queue.stop)
 
+@app.route('/trainer/jobs')
+def list_trainer_jobs():
+    result = event_queue.call_service(
+        service_name = 'list_trainer_jobs',
+        service_data = None)
+    return jsonify(result)
+
 @app.route('/link/models')
 def list_link_models():
     result = event_queue.call_service(

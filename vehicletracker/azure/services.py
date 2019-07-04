@@ -55,8 +55,10 @@ class ServiceQueue():
                     try:
                         event = json.loads(str(msg))
                         event_type = event['eventType']
-                        correlation_id = msg.properties.correlation_id.decode('utf-8') 
-                        reply_to = msg.properties.reply_to.decode('utf-8') 
+                        if msg.properties.correlation_id:
+                            correlation_id = msg.properties.correlation_id.decode('utf-8') 
+                        if msg.properties.reply_to:
+                            reply_to = msg.properties.reply_to.decode('utf-8') 
 
                         if reply_to:
                             reply_to_queue = self.sb_client.get_queue(reply_to)
