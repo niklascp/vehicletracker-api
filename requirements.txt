@@ -1,4 +1,2 @@
 flask
-azure-servicebus
-azure-eventhub
 pika
