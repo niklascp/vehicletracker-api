@@ -1,0 +1,34 @@
+logging:
+  version: 1
+  disable_existing_loggers: true
+  formatters:
+    standard:
+      format: '%(asctime)s; %(levelname)-8s; %(name)-35s; %(funcName)-20s;%(lineno)4d: %(message)s'
+      datefmt: "%I:%M:%S"
+    verbose:
+      class: 'logging.Formatter'
+      format: '%(asctime)s; %(levelname)-8s; [%(process)d - %(thread)s]; %(name)-35s; %(funcName)-20s;%(lineno)4d: %(message)s'
+  handlers:
+    console:
+      level: 'DEBUG'
+      class: 'logging.StreamHandler'
+      formatter: 'standard'
+    file_handler:
+      level: 'DEBUG'
+      class: 'logging.handlers.TimedRotatingFileHandler'
+      formatter: 'verbose'
+      filename: './logs/log.log'
+      when: midnight
+      encoding: 'utf-8'
+  loggers:
+    vehicletracker:
+      level: 'DEBUG'
+    vehicletracker.api:
+      level: 'DEBUG'
+    vehicletracker.data.events:
+      level: 'DEBUG'
+  root:
+    level: 'INFO'
+    handlers:
+      - 'console'
+      - 'file_handler'

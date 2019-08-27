@@ -29,9 +29,7 @@ class EventQueue():
             port = os.getenv('RABBITMQ_PORT', 5672),
             virtual_host = os.getenv('RABBITMQ_VHOST', '/'),
             credentials = credentials)
-
-        print(parameters)
-
+        
         # Declare connections and channel
         self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
@@ -126,8 +124,17 @@ class EventQueue():
     def reply_callback(self, ch, method, properties, body):
         try:
             if properties.content_type == 'application/json':
-                event = json.loads(body)
+                data = json.loads(body)
+                #event_type = event['eventType']
                 correlation_id = properties.correlation_id
+
+                _LOGGER.debug(f"handling reply (correlation_id: {correlation_id})")	
+
+                if correlation_id:	
+                    wait_event = self.wait_events.pop(correlation_id, None)
+                    if wait_event:
+                        self.results[correlation_id] = data
+                        wait_event.set()
 
         except Exception:
             _LOGGER.exception('Error in reply_callback.')
