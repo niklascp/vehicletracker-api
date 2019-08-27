@@ -1,2 +1,2 @@
 flask
-azure-eventhub
+pika
