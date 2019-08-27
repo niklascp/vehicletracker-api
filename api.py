@@ -1,10 +1,10 @@
 import atexit
 from flask import Flask, jsonify, request
 
-from vehicletracker.azure.services import ServiceQueue
+from vehicletracker.data.events import EventQueue
 
 app = Flask(__name__)
-event_queue = ServiceQueue(domain = 'api')
+event_queue = EventQueue(domain = 'api')
 
 @app.before_first_request
 def startup():
