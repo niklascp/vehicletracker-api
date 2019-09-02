@@ -39,6 +39,15 @@ def list_link_models():
         service_data = None)
     return jsonify(result)
 
+@app.route('/link/travel_time/normal_days')
+def link_travel_time_normal_days():
+    result = event_queue.call_service('link_travel_time_normal_days', {
+        'linkRef': request.args.get('link_ref'),
+        'time': request.args.get('time'),
+        'n': request.args.get('n')
+    }, timeout = 5)
+    return jsonify(result)
+
 @app.route('/link/travel_time/special_days')
 def link_travel_time_special_days():
     result = event_queue.call_service('link_travel_time_special_days', {
