@@ -3,6 +3,7 @@ import logging
 import socket
 import threading
 
+import time
 import uuid
 
 import pika
@@ -40,10 +41,10 @@ class EventQueue():
         self.results = {}
         self.listeners = {}
 
-    def _consume(self):
-        while not self.cancel_event.isSet():
+    def consume_internal(self):
+        while not self.cancel_event.is_set():
             try:
-                _LOGGER.info('Connecting to RabbitMQ ...')
+                _LOGGER.info('connecting to RabbitMQ ...')
 
                 # Declare connections and channel
                 self.connection = pika.BlockingConnection(self.parameters)
@@ -66,28 +67,34 @@ class EventQueue():
                 self.channel.basic_consume(queue = self.worker_queue_name, on_message_callback = self.event_callback, auto_ack = True)
                 self.channel.basic_consume(queue = self.callback_queue, on_message_callback = self.reply_callback, auto_ack = True)
 
-                try:
-                    self.channel.start_consuming()
-                except KeyboardInterrupt:
-                    self.channel.stop_consuming()
-                    self.connection.close()
-                    break
+                for event_type in self.listeners.keys():
+                    self.channel.queue_bind(
+                        exchange = EVENTS_EXCHANGE_NAME,
+                        queue = self.worker_queue_name,
+                        routing_key = event_type)
+
+                self.channel.start_consuming()
             
             except pika.exceptions.ConnectionClosedByBroker:
                 # Recovery from server-initiated connection closure, including
                 # when the node is stopped cleanly
-                _LOGGER.info("Server-initiated connection closure, retrying...")
+                _LOGGER.info("server-initiated connection closure, retrying...")
                 continue
             # Do not recover on channel errors
             except pika.exceptions.AMQPChannelError:
-                _LOGGER.exception("Caught a channel error, stopping...")
+                _LOGGER.exception("caught a channel error, stopping...")
                 break
             # Recover on all other connection errors
             except pika.exceptions.AMQPConnectionError:
-                _LOGGER.exception("Connection was closed, retrying...")
+                if self.cancel_event.is_set():
+                    break
+                _LOGGER.exception("connection was closed, retrying...")
                 continue
 
     def publish_event(self, event, reply_to = None, correlation_id = None):
+        while self.channel == None:
+            time.sleep(0.1)
+
         self.channel.basic_publish(
             exchange = EVENTS_EXCHANGE_NAME,
             routing_key = event['eventType'],
@@ -100,6 +107,9 @@ class EventQueue():
         )
 
     def publish_reply(self, data, to = None, correlation_id = None):
+        while self.channel == None:
+            time.sleep(0.1)
+            
         self.channel.basic_publish(
             exchange = '',
             routing_key = to,
@@ -174,10 +184,11 @@ class EventQueue():
         _LOGGER.info(f"listening for {event_type}.")
         if event_type not in self.listeners:
             self.listeners[event_type] = []
-            self.channel.queue_bind(
-                exchange = EVENTS_EXCHANGE_NAME,
-                queue = self.worker_queue_name,
-                routing_key = event_type)
+            if self.channel:
+                self.channel.queue_bind(
+                    exchange = EVENTS_EXCHANGE_NAME,
+                    queue = self.worker_queue_name,
+                    routing_key = event_type)
 
         self.listeners[event_type].append(target)
     
@@ -208,23 +219,27 @@ class EventQueue():
 
     def start(self):
         if self.thread:
-            _LOGGER.warning(f"Cannot start event processing, since it has already been started.")
+            _LOGGER.warning(f"cannot start event processing, since it has already been started.")
             return
 
-        _LOGGER.info(f"event processing is starting ...")
+        _LOGGER.info("event processing is starting ...")
         self.cancel_event = threading.Event()
-        self.thread = threading.Thread(target=self._consume)
+        self.thread = threading.Thread(target=self.consume_internal)
         self.thread.daemon = True
         self.thread.start()
 
     def stop(self):
-        _LOGGER.info(f"event processing is stopping ...")
-
+        _LOGGER.info("event processing is stopping ...")
+        
         if self.cancel_event:
             self.cancel_event.set()
 
         if self.connection:
-            self.connection.close()
+            try:
+                self.channel.stop_consuming()
+                self.connection.close()
+            except pika.exceptions.AMQPConnectionError:
+                pass
 
         if self.thread:
             self.thread.join(timeout=5) 

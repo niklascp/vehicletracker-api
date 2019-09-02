@@ -3,18 +3,15 @@ import os
 import logging
 import logging.config
 
+from datetime import datetime
+
 import yaml
 
 import atexit
 from flask import Flask, jsonify, request
 
+from vehicletracker.helpers.config import load_config
 from vehicletracker.data.events import EventQueue
-
-def load_config():
-    config_file = "configuration.yaml"
-    with open(config_file, "r") as fd:
-        config = yaml.load(fd.read())
-    return config
 
 if not os.path.exists('./logs'):
     os.makedirs('./logs')
@@ -40,6 +37,15 @@ def list_link_models():
     result = event_queue.call_service(
         service_name = 'list_link_models',
         service_data = None)
+    return jsonify(result)
+
+@app.route('/link/travel_time/special_days')
+def link_travel_time_special_days():
+    result = event_queue.call_service('link_travel_time_special_days', {
+        'linkRef': request.args.get('link_ref'),
+        'fromTime': request.args.get('from_time'),
+        'toTime': request.args.get('to_time')
+    }, timeout = 5)
     return jsonify(result)
 
 @app.route('/link/predict')
