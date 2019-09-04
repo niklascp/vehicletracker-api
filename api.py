@@ -5,13 +5,15 @@ import logging.config
 
 from datetime import datetime
 
+import requests
 import yaml
 
 import atexit
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 from vehicletracker.helpers.config import load_config
-from vehicletracker.data.events import EventQueue
+from vehicletracker.helpers.events import EventQueue
 
 if not os.path.exists('./logs'):
     os.makedirs('./logs')
@@ -20,6 +22,8 @@ config = load_config()
 logging.config.dictConfig(config['logging'])
 
 app = Flask(__name__)
+CORS(app)
+
 event_queue = EventQueue(domain = 'api')
 event_queue.start()
 atexit.register(event_queue.stop)
@@ -29,14 +33,15 @@ def list_trainer_jobs():
     result = event_queue.call_service(
         service_name = 'list_trainer_jobs',
         service_data = None,
-        timeout = 5)
+        timeout = 1)
     return jsonify(result)
 
 @app.route('/link/models')
 def list_link_models():
     result = event_queue.call_service(
-        service_name = 'list_link_models',
-        service_data = None)
+        service_name = 'link_models',
+        service_data = None,
+        timeout = 5)
     return jsonify(result)
 
 @app.route('/link/travel_time/n_preceding_normal_days')

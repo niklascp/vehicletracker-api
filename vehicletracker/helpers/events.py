@@ -9,9 +9,10 @@ import uuid
 import pika
 import json
 
-from vehicletracker.consts import EVENTS_EXCHANGE_NAME
-
 from typing import Any, Callable
+
+#REQUESTS_EXCHANGE_NAME = 'vehicletracker-requests'
+EVENTS_EXCHANGE_NAME = 'vehicletracker-events'
 
 _LOGGER = logging.getLogger(__name__)
 
