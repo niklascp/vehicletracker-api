@@ -65,7 +65,7 @@ def link_travel_time_special_days():
 @app.route('/link/predict')
 def link_predict():
     result = event_queue.call_service(
-        service_name = 'predict_link',
+        service_name = 'link_predict',
         service_data = {
             'linkRef': request.args.get('link_ref'),
             'model': request.args.get('model', default = 'svr'),
@@ -73,10 +73,10 @@ def link_predict():
     })
     return jsonify(result)
 
-@app.route('/link/train')
+@app.route('/link/train', methods=['POST'])
 def link_train():
     result = event_queue.call_service(
-        service_name = 'schedule_train_link_model',
+        service_name = 'link_model_schedule_train',
         service_data = {
             'linkRef': request.args.get('link_ref'),
             'model': request.args.get('model', default = 'svr'),
