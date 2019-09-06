@@ -44,23 +44,32 @@ def list_link_models():
         timeout = 5)
     return jsonify(result)
 
+@app.route('/link/travel_time')
+def link_travel_time_special_days():
+    result, content_type = event_queue.call_service('link_travel_time', {
+        'linkRef': request.args.get('link_ref'),
+        'fromTime': request.args.get('from_time'),
+        'toTime': request.args.get('to_time')
+    }, timeout = int(request.args.get('timeout', 30)), parse_json = False)
+    return Response(result, mimetype = content_type)
+
 @app.route('/link/travel_time/n_preceding_normal_days')
 def link_travel_time_n_preceding_normal_days():
     result, content_type = event_queue.call_service('link_travel_time_n_preceding_normal_days', {
         'linkRef': request.args.get('link_ref'),
         'time': request.args.get('time'),
         'n': request.args.get('n')
-    }, timeout = int(request.args.get('timeout', 30)), parse_json=False)
-    return Response(result, mimetype=content_type)
+    }, timeout = int(request.args.get('timeout', 30)), parse_json = False)
+    return Response(result, mimetype = content_type)
 
 @app.route('/link/travel_time/special_days')
 def link_travel_time_special_days():
-    result = event_queue.call_service('link_travel_time_special_days', {
+    result, content_type = event_queue.call_service('link_travel_time_special_days', {
         'linkRef': request.args.get('link_ref'),
         'fromTime': request.args.get('from_time'),
         'toTime': request.args.get('to_time')
-    }, timeout = 5)
-    return jsonify(result)
+    }, timeout = int(request.args.get('timeout', 30)), parse_json = False)
+    return Response(result, mimetype = content_type)
 
 @app.route('/link/predict')
 def link_predict():
