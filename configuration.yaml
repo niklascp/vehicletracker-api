@@ -25,8 +25,8 @@ logging:
       level: 'DEBUG'
     vehicletracker.api:
       level: 'DEBUG'
-    vehicletracker.data.events:
-      level: 'DEBUG'
+    vehicletracker.helpers.events:
+      level: 'INFO'
   root:
     level: 'INFO'
     handlers:

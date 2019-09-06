@@ -9,7 +9,7 @@ import requests
 import yaml
 
 import atexit
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 
 from vehicletracker.helpers.config import load_config
@@ -46,12 +46,12 @@ def list_link_models():
 
 @app.route('/link/travel_time/n_preceding_normal_days')
 def link_travel_time_n_preceding_normal_days():
-    result = event_queue.call_service('link_travel_time_n_preceding_normal_days', {
+    result, content_type = event_queue.call_service('link_travel_time_n_preceding_normal_days', {
         'linkRef': request.args.get('link_ref'),
         'time': request.args.get('time'),
         'n': request.args.get('n')
-    }, timeout = 5)
-    return jsonify(result)
+    }, timeout = int(request.args.get('timeout', 30)), parse_json=False)
+    return Response(result, mimetype=content_type)
 
 @app.route('/link/travel_time/special_days')
 def link_travel_time_special_days():
