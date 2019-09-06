@@ -45,7 +45,7 @@ def list_link_models():
     return jsonify(result)
 
 @app.route('/link/travel_time')
-def link_travel_time_special_days():
+def link_travel_time():
     result, content_type = event_queue.call_service('link_travel_time', {
         'linkRef': request.args.get('link_ref'),
         'fromTime': request.args.get('from_time'),
