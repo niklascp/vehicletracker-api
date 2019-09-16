@@ -236,7 +236,7 @@ class EventQueue():
                 # ValueError if listener did not exist within event_type
                 _LOGGER.warning("Unable to remove unknown target %s", target)
 
-        self.listeners[event_type].append(target)
+        listeners[event_type].append(target)
 
         return remove_listener
 
