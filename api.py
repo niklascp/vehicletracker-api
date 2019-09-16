@@ -3,10 +3,12 @@ import os
 import logging
 import logging.config
 
+import json
+import queue
+
 from datetime import datetime
 
 import requests
-import yaml
 
 import atexit
 from flask import Flask, jsonify, request, Response
@@ -27,6 +29,32 @@ CORS(app)
 event_queue = EventQueue(domain = 'api')
 event_queue.start()
 atexit.register(event_queue.stop)
+
+@app.route('/event-stream')
+def streamed_response():
+    buffer = queue.Queue() 
+    unsub = event_queue.listen(
+        request.args.get('event_type', '*'),
+        buffer.put)
+
+    def generate():
+        try:
+            while True:
+                event = buffer.get()
+                # wait for source data to be available, then push it
+                yield 'data: {}\n\n'.format(json.dumps(event))
+        except GeneratorExit:            
+            unsub()
+        
+    return Response(generate(), mimetype="text/event-stream")
+
+@app.route('/service/<service_name>', methods=['POST'])
+def call_service(service_name):
+    result, content_type = event_queue.call_service(
+        service_name = service_name, 
+        service_data = request.json,
+        timeout = int(request.args.get('timeout', 30)), parse_json = False)
+    return Response(result, mimetype = content_type)
 
 @app.route('/trainer/jobs')
 def list_trainer_jobs():
