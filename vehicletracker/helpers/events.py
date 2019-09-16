@@ -100,7 +100,7 @@ class EventQueue():
 
     def node_event_internal(self, ch, method, properties, body):
         # Test if this is a reply
-        if properties.correlation_id in self.wait_events:	
+        if properties.reply_to is None and properties.correlation_id in self.wait_events:	
             _LOGGER.debug(f"got reply (correlation_id: {properties.correlation_id})")	
             wait_event = self.wait_events.pop(properties.correlation_id, None)            
             self.results[properties.correlation_id] = (body, properties.content_type)
