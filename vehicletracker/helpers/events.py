@@ -187,7 +187,7 @@ class EventQueue():
                         else:
                             result_data, content_type = result, None
 
-                        if result_data and properties.reply_to:
+                        if result_data and reply_to:
                             self.publish_reply(
                                 data = result_data,
                                 content_type = content_type,
@@ -206,9 +206,7 @@ class EventQueue():
                             event = {
                                 'eventType': 'error',
                                 'error': str(e)
-                            },
-                            reply_to = reply_to,
-                            correlation_id = correlation_id
+                            }
                         )
 
         except Exception:
