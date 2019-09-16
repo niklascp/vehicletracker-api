@@ -33,7 +33,7 @@ atexit.register(event_queue.stop)
 @app.route('/event-stream')
 def streamed_response():
     buffer = queue.Queue() 
-    unsub = event_queue.listen(
+    unsub = event_queue.listen_node(
         request.args.get('event_type', '*'),
         buffer.put)
 
